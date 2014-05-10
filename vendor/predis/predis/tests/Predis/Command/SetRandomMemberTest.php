@@ -11,13 +11,11 @@
 
 namespace Predis\Command;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
 /**
  * @group commands
  * @group realm-set
  */
-class SetRandomMemberTest extends CommandTestCase
+class SetRandomMemberTest extends PredisCommandTestCase
 {
     /**
      * {@inheritdoc}
@@ -40,8 +38,8 @@ class SetRandomMemberTest extends CommandTestCase
      */
     public function testFilterArguments()
     {
-        $arguments = array('key');
-        $expected = array('key');
+        $arguments = array('key', 1);
+        $expected = array('key', 1);
 
         $command = $this->getCommand();
         $command->setArguments($arguments);
@@ -72,6 +70,17 @@ class SetRandomMemberTest extends CommandTestCase
     }
 
     /**
+     * @group disconnected
+     */
+    public function testPrefixKeysIgnoredOnEmptyArguments()
+    {
+        $command = $this->getCommand();
+        $command->prefixKeys('prefix:');
+
+        $this->assertSame(array(), $command->getArguments());
+    }
+
+    /**
      * @group connected
      */
     public function testReturnsRandomMemberFromSet()
@@ -97,7 +106,7 @@ class SetRandomMemberTest extends CommandTestCase
     /**
      * @group connected
      * @expectedException Predis\ServerException
-     * @expectedExceptionMessage ERR Operation against a key holding the wrong kind of value
+     * @expectedExceptionMessage Operation against a key holding the wrong kind of value
      */
     public function testThrowsExceptionOnWrongType()
     {

@@ -11,13 +11,11 @@
 
 namespace Predis\Command;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
 /**
  * @group commands
  * @group realm-zset
  */
-class ZSetIncrementByTest extends CommandTestCase
+class ZSetIncrementByTest extends PredisCommandTestCase
 {
     /**
      * {@inheritdoc}
@@ -72,6 +70,17 @@ class ZSetIncrementByTest extends CommandTestCase
     }
 
     /**
+     * @group disconnected
+     */
+    public function testPrefixKeysIgnoredOnEmptyArguments()
+    {
+        $command = $this->getCommand();
+        $command->prefixKeys('prefix:');
+
+        $this->assertSame(array(), $command->getArguments());
+    }
+
+    /**
      * @group connected
      */
     public function testIncrementsScoreOfMemberByFloat()
@@ -87,7 +96,7 @@ class ZSetIncrementByTest extends CommandTestCase
     /**
      * @group connected
      * @expectedException Predis\ServerException
-     * @expectedExceptionMessage ERR Operation against a key holding the wrong kind of value
+     * @expectedExceptionMessage Operation against a key holding the wrong kind of value
      */
     public function testThrowsExceptionOnWrongType()
     {

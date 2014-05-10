@@ -16,7 +16,6 @@ use SplQueue;
 use Predis\ClientException;
 use Predis\ResponseErrorInterface;
 use Predis\ResponseObjectInterface;
-use Predis\ResponseQueued;
 use Predis\ServerException;
 use Predis\Connection\ConnectionInterface;
 use Predis\Connection\SingleConnectionInterface;
@@ -47,7 +46,7 @@ class MultiExecExecutor implements PipelineExecutorInterface
      * connection before starting to execute the commands stored
      * in the pipeline.
      *
-     * @param ConnectionInterface Connection instance.
+     * @param ConnectionInterface $connection Connection instance.
      */
     protected function checkConnection(ConnectionInterface $connection)
     {
@@ -101,8 +100,8 @@ class MultiExecExecutor implements PipelineExecutorInterface
     /**
      * Consumes an iterator response returned by EXEC.
      *
-     * @param SplQueue $commands Pipelined commands
-     * @param Iterator $responses Responses returned by EXEC.
+     * @param  SplQueue $commands  Pipelined commands
+     * @param  Iterator $responses Responses returned by EXEC.
      * @return array
      */
     protected function consumeIteratorResponse(SplQueue $commands, Iterator $responses)
@@ -130,8 +129,8 @@ class MultiExecExecutor implements PipelineExecutorInterface
     /**
      * Consumes an array response returned by EXEC.
      *
-     * @param SplQueue $commands Pipelined commands
-     * @param Array $responses Responses returned by EXEC.
+     * @param  SplQueue $commands  Pipelined commands
+     * @param  Array    $responses Responses returned by EXEC.
      * @return array
      */
     protected function consumeArrayResponse(SplQueue $commands, Array &$responses)

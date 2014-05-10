@@ -11,13 +11,11 @@
 
 namespace Predis\Command;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
 /**
  * @group commands
  * @group realm-string
  */
-class StringIncrementByFloatTest extends CommandTestCase
+class StringIncrementByFloatTest extends PredisCommandTestCase
 {
     /**
      * {@inheritdoc}
@@ -69,6 +67,17 @@ class StringIncrementByFloatTest extends CommandTestCase
         $command->prefixKeys('prefix:');
 
         $this->assertSame($expected, $command->getArguments());
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testPrefixKeysIgnoredOnEmptyArguments()
+    {
+        $command = $this->getCommand();
+        $command->prefixKeys('prefix:');
+
+        $this->assertSame(array(), $command->getArguments());
     }
 
     /**
@@ -124,7 +133,7 @@ class StringIncrementByFloatTest extends CommandTestCase
     /**
      * @group connected
      * @expectedException Predis\ServerException
-     * @expectedExceptionMessage ERR Operation against a key holding the wrong kind of value
+     * @expectedExceptionMessage Operation against a key holding the wrong kind of value
      */
     public function testThrowsExceptionOnWrongType()
     {

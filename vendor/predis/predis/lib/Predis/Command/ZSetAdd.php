@@ -11,8 +11,6 @@
 
 namespace Predis\Command;
 
-use Predis\Helpers;
-
 /**
  * @link http://redis.io/commands/zadd
  * @author Daniele Alessandri <suppakilla@gmail.com>
@@ -35,7 +33,7 @@ class ZSetAdd extends PrefixableCommand
         if (count($arguments) === 2 && is_array($arguments[1])) {
             $flattened = array($arguments[0]);
 
-            foreach($arguments[1] as $member => $score) {
+            foreach ($arguments[1] as $member => $score) {
                 $flattened[] = $score;
                 $flattened[] = $member;
             }

@@ -11,13 +11,11 @@
 
 namespace Predis\Command;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
 /**
  * @group commands
  * @group realm-pubsub
  */
-class PubSubUnsubscribeTest extends CommandTestCase
+class PubSubUnsubscribeTest extends PredisCommandTestCase
 {
     /**
      * {@inheritdoc}
@@ -91,6 +89,17 @@ class PubSubUnsubscribeTest extends CommandTestCase
     }
 
     /**
+     * @group disconnected
+     */
+    public function testPrefixKeysIgnoredOnEmptyArguments()
+    {
+        $command = $this->getCommand();
+        $command->prefixKeys('prefix:');
+
+        $this->assertSame(array(), $command->getArguments());
+    }
+
+    /**
      * @group connected
      */
     public function testDoesNotSwitchToSubscribeMode()
@@ -132,8 +141,10 @@ class PubSubUnsubscribeTest extends CommandTestCase
         $this->assertSame(array('subscribe', 'channel:foo', 1), $redis->subscribe('channel:foo'));
         $this->assertSame(array('subscribe', 'channel:bar', 2), $redis->subscribe('channel:bar'));
 
-        $this->assertSame(array('unsubscribe', 'channel:foo', 1), $redis->unsubscribe());
-        $this->assertSame(array('unsubscribe', 'channel:bar', 0), $redis->getConnection()->read());
+        list($_, $unsubscribed1, $_) = $redis->unsubscribe();
+        list($_, $unsubscribed2, $_) = $redis->getConnection()->read();
+        $this->assertSameValues(array('channel:foo', 'channel:bar'), array($unsubscribed1, $unsubscribed2));
+
         $this->assertSame('echoed', $redis->echo('echoed'));
     }
 }

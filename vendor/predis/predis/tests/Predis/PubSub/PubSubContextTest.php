@@ -11,15 +11,14 @@
 
 namespace Predis\PubSub;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
+use PredisTestCase;
 use Predis\Client;
 use Predis\Profile\ServerProfile;
 
 /**
  * @group realm-pubsub
  */
-class PubSubContextTest extends StandardTestCase
+class PubSubContextTest extends PredisTestCase
 {
     /**
      * @group disconnected
@@ -243,6 +242,19 @@ class PubSubContextTest extends StandardTestCase
         $this->assertSame(0, $message->payload);
 
         $this->assertFalse($pubsub->valid());
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testGetUnderlyingClientInstance()
+    {
+        $connection = $this->getMock('Predis\Connection\SingleConnectionInterface');
+
+        $client = new Client($connection);
+        $pubsub = new PubSubContext($client);
+
+        $this->assertSame($client, $pubsub->getClient());
     }
 
     // ******************************************************************** //

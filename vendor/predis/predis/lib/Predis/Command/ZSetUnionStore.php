@@ -50,7 +50,7 @@ class ZSetUnionStore extends PrefixableCommand
     /**
      * Returns a list of options and modifiers compatible with Redis.
      *
-     * @param array $options List of options.
+     * @param  array $options List of options.
      * @return array
      */
     private function prepareOptions($options)
@@ -79,15 +79,15 @@ class ZSetUnionStore extends PrefixableCommand
      */
     public function prefixKeys($prefix)
     {
-        $arguments = $this->getArguments();
+        if ($arguments = $this->getArguments()) {
+            $arguments[0] = "$prefix{$arguments[0]}";
+            $length = ((int) $arguments[1]) + 2;
 
-        $arguments[0] = "$prefix{$arguments[0]}";
-        $length = ((int) $arguments[1]) + 2;
+            for ($i = 2; $i < $length; $i++) {
+                $arguments[$i] = "$prefix{$arguments[$i]}";
+            }
 
-        for ($i = 2; $i < $length; $i++) {
-            $arguments[$i] = "$prefix{$arguments[$i]}";
+            $this->setRawArguments($arguments);
         }
-
-        $this->setRawArguments($arguments);
     }
 }

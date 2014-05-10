@@ -11,13 +11,11 @@
 
 namespace Predis\Command;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
 /**
  * @group commands
  * @group realm-key
  */
-class KeyTimeToLiveTest extends CommandTestCase
+class KeyTimeToLiveTest extends PredisCommandTestCase
 {
     /**
      * {@inheritdoc}
@@ -74,6 +72,17 @@ class KeyTimeToLiveTest extends CommandTestCase
     }
 
     /**
+     * @group disconnected
+     */
+    public function testPrefixKeysIgnoredOnEmptyArguments()
+    {
+        $command = $this->getCommand();
+        $command->prefixKeys('prefix:');
+
+        $this->assertSame(array(), $command->getArguments());
+    }
+
+    /**
      * @group connected
      */
     public function testReturnsTTL()
@@ -89,21 +98,25 @@ class KeyTimeToLiveTest extends CommandTestCase
     /**
      * @group connected
      */
-    public function testReturnsLessThanZeroOnNonExistingKeys()
-    {
-        $redis = $this->getClient();
-
-        $this->assertSame(-1, $redis->ttl('foo'));
-    }
-
-    /**
-     * @group connected
-     */
     public function testReturnsLessThanZeroOnNonExpiringKeys()
     {
         $redis = $this->getClient();
 
         $redis->set('foo', 'bar');
         $this->assertSame(-1, $redis->ttl('foo'));
+    }
+
+    /**
+     * @group connected
+     */
+    public function testReturnsLessThanZeroOnNonExistingKeys()
+    {
+        $this->executeOnRedisVersion('2.8.0', '<', function ($test) {
+            $test->assertSame(-1, $test->getClient()->ttl('foo'));
+        });
+
+        $this->executeOnRedisVersion('2.8.0', '>=', function ($test) {
+            $test->assertSame(-2, $test->getClient()->ttl('foo'));
+        });
     }
 }

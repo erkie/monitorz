@@ -11,13 +11,11 @@
 
 namespace Predis\Command;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
 /**
  * @group commands
  * @group realm-list
  */
-class ListPushTailTest extends CommandTestCase
+class ListPushTailTest extends PredisCommandTestCase
 {
     /**
      * {@inheritdoc}
@@ -86,6 +84,17 @@ class ListPushTailTest extends CommandTestCase
     }
 
     /**
+     * @group disconnected
+     */
+    public function testPrefixKeysIgnoredOnEmptyArguments()
+    {
+        $command = $this->getCommand();
+        $command->prefixKeys('prefix:');
+
+        $this->assertSame(array(), $command->getArguments());
+    }
+
+    /**
      * @group connected
      */
     public function testPushesElementsToHeadOfList()
@@ -101,7 +110,7 @@ class ListPushTailTest extends CommandTestCase
     /**
      * @group connected
      * @expectedException Predis\ServerException
-     * @expectedExceptionMessage ERR Operation against a key holding the wrong kind of value
+     * @expectedExceptionMessage Operation against a key holding the wrong kind of value
      */
     public function testThrowsExceptionOnWrongType()
     {

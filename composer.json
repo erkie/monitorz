@@ -1,0 +1,7 @@
+{
+	"require-dev": {
+		"predis/predis": "*",
+		"nette/mail": "2.3.*@dev",
+		"nette/utils": "2.3.*@dev"
+	}
+}

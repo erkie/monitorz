@@ -11,13 +11,11 @@
 
 namespace Predis\Command;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
 /**
  * @group commands
  * @group realm-key
  */
-class KeyPreciseTimeToLiveTest extends CommandTestCase
+class KeyPreciseTimeToLiveTest extends PredisCommandTestCase
 {
     /**
      * {@inheritdoc}
@@ -74,6 +72,17 @@ class KeyPreciseTimeToLiveTest extends CommandTestCase
     }
 
     /**
+     * @group disconnected
+     */
+    public function testPrefixKeysIgnoredOnEmptyArguments()
+    {
+        $command = $this->getCommand();
+        $command->prefixKeys('prefix:');
+
+        $this->assertSame(array(), $command->getArguments());
+    }
+
+    /**
      * @group connected
      */
     public function testReturnsTTL()
@@ -89,21 +98,23 @@ class KeyPreciseTimeToLiveTest extends CommandTestCase
     /**
      * @group connected
      */
-    public function testReturnsLessThanZeroOnNonExistingKeys()
-    {
-        $redis = $this->getClient();
-
-        $this->assertSame(-1, $redis->pttl('foo'));
-    }
-
-    /**
-     * @group connected
-     */
     public function testReturnsLessThanZeroOnNonExpiringKeys()
     {
         $redis = $this->getClient();
 
         $redis->set('foo', 'bar');
         $this->assertSame(-1, $redis->pttl('foo'));
+    }
+
+    /**
+     * @group connected
+     * @todo PTTL changed in Redis >= 2.8 to return -2 on non existing keys, we
+     *       should handle this case with a better solution than the current one.
+     */
+    public function testReturnsLessThanZeroOnNonExistingKeys()
+    {
+        $redis = $this->getClient();
+
+        $this->assertLessThanOrEqual(-1, $redis->pttl('foo'));
     }
 }

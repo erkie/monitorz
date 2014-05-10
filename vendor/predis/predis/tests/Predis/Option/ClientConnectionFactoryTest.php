@@ -11,14 +11,13 @@
 
 namespace Predis\Option;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
+use PredisTestCase;
 use Predis\Connection\ConnectionFactory;
 
 /**
  *
  */
-class ClientConnectionFactoryTest extends StandardTestCase
+class ClientConnectionFactoryTest extends PredisTestCase
 {
     /**
      * @group disconnected
@@ -59,6 +58,27 @@ class ClientConnectionFactoryTest extends StandardTestCase
         $option->expects($this->never())->method('getDefault');
 
         $this->assertSame($value, $option->filter($options, $value));
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testValidationAcceptsCallableObjectAsInitializers()
+    {
+        $value = $this->getMock('Predis\Connection\ConnectionFactoryInterface');
+        $options = $this->getMock('Predis\Option\ClientOptionsInterface');
+        $option = new ClientConnectionFactory();
+
+        $initializer = $this->getMock('stdClass', array('__invoke'));
+        $initializer->expects($this->once())
+                    ->method('__invoke')
+                    ->with($this->isInstanceOf('Predis\Option\ClientOptionsInterface'), $option)
+                    ->will($this->returnValue($value));
+
+        $cluster = $option->filter($options, $initializer, $option);
+
+        $this->assertInstanceOf('Predis\Connection\ConnectionFactoryInterface', $cluster);
+        $this->assertSame($value, $cluster);
     }
 
     /**

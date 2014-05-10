@@ -1,5 +1,152 @@
+v0.8.5 (2014-01-16)
+================================================================================
+
+- Added `2.8` in the server profiles aliases list for Redis 2.8. `2.6` is still
+  the default server profile and `dev` now targets Redis 3.0.
+
+- Added `SCAN`, `SSCAN`, `ZSCAN`, `HSCAN` to the server profile for Redis 2.8.
+
+- Implemented PHP iterators for incremental iterations over Redis collections:
+
+    - keyspace (cursor-based iterator using `SCAN`)
+    - sets (cursor-based iterator using `SSCAN`)
+    - sorted sets (cursor-based iterator using `ZSCAN`)
+    - hashes (cursor-based iterator using `HSCAN`)
+    - lists (plain iterator using `LRANGE`)
+
+- It is now possible to execute "raw commands" using `Predis\Command\RawCommand`
+  and a variable list of command arguments. Input arguments are not filtered and
+  responses are not parsed, which means arguments must follow the signature of
+  the command as defined by Redis and complex responses are left untouched.
+
+- URI parsing for connection parameters has been improved and has slightly less
+  overhead when the number of fields in the querystring grows. New features are:
+
+    - Parsing does not break when value of a field contains one or more "=".
+    - Repeated fieldnames using [] produce an array of values.
+    - Empty or incomplete "key=value" pairs result in an empty string for "key".
+
+- Various improvements and fixes to the redis-cluster connection backend:
+
+    - __FIX__: the `ASKING` command is sent upon -ASK redirections.
+    - An updated slots-map can be fetched from nodes using the `CLUSTER NODES`
+      command. By default this is a manual operation but can be enabled to get
+      automatically done upon -MOVED redirections.
+    - It is possible to specify a common set of connection parameters that are
+      applied to connections created on the fly upon redirections to nodes not
+      part of the initial pool.
+
+- List of deprecated methods:
+
+    - `Predis\Client::multiExec()`: superseded by `Predis\Client::transaction()`
+      and to be removed in the next major release.
+    - `Predis\Client::pubSub()`: superseded by `Predis\Client::pubSubLoop()` and
+      to be removed in the next major release. This change was needed due to the
+      recently introduced `PUBSUB` command in Redis 2.8.
+
+
+v0.8.4 (2013-07-27)
+================================================================================
+
+- Added `DUMP` and `RESTORE` to the server profile for Redis 2.6.
+
+- Connection exceptions now report basic host details in their messages.
+
+- Allow `Predis\Connection\PhpiredisConnection` to use a random IP when a host
+  actually has several IPs (ISSUE #116).
+
+- __FIX__: allow `HMSET` when using a cluster of Redis nodes with client-side
+  sharding or redis-cluster (ISSUE #106).
+
+- __FIX__: set `WITHSCORES` modifer for `ZRANGE`, `ZREVRANGE`, `ZRANGEBYSCORE`
+  and `ZREVRANGEBYSCORE` only when the options array passed to these commands
+  has `WITHSCORES` set to `true` (ISSUE #107).
+
+- __FIX__: scripted commands falling back from `EVALSHA` to `EVAL` resulted in
+  PHP errors when using a prefixed client (ISSUE #109).
+
+- __FIX__: `Predis\PubSub\DispatcherLoop` now works properly when using key
+  prefixing (ISSUE #114).
+
+
+v0.8.3 (2013-02-18)
+================================================================================
+
+- Added `CLIENT SETNAME` and `CLIENT GETNAME` (ISSUE #102).
+
+- Implemented the `Predis\Connection\PhpiredisStreamConnection` class using the
+  `phpiredis` extension like `Predis\Connection\PhpiredisStreamConnection`, but
+  without requiring the `socket` extension since it relies on PHP's streams.
+
+- Added support for the TCP_NODELAY flag via the `tcp_nodelay` parameter for
+  stream-based connections, namely `Predis\Connection\StreamConnection` and
+  `Predis\Connection\PhpiredisStreamConnection` (requires PHP >= 5.4.0).
+
+- Updated the aggregated connection class for redis-cluster to work with 16384
+  hash slots instead of 4096 to reflect the recent change from redis unstable
+  ([see this commit](https://github.com/antirez/redis/commit/ebd666d)).
+
+- The constructor of `Predis\Client` now accepts a callable as first argument
+  returning `Predis\Connection\ConnectionInterface`. Users can create their
+  own self-contained strategies to create and set up the underlying connection.
+
+- Users should return `0` from `Predis\Command\ScriptedCommand::getKeysCount()`
+  instead of `FALSE` to indicate that all of the arguments of a Lua script must
+  be used to populate `ARGV[]`. This does not represent a breaking change.
+
+- The `Predis\Helpers` class has been deprecated and it will be removed in
+  future releases.
+
+
+v0.8.2 (2013-02-03)
+================================================================================
+
+- Added `Predis\Session\SessionHandler` to make it easy to store PHP sessions
+  on Redis using Predis. Please note that this class needs either PHP >= 5.4.0
+  or a polyfill for PHP's `SessionHandlerInterface`.
+
+- Added the ability to get the default value of a client option directly from
+  `Predis\Option\ClientOption` using the `getDefault()` method by passing the
+  option name or its instance.
+
+- __FIX__: the standard pipeline executor was not using the response parser
+  methods associated to commands to process raw responses (ISSUE #101).
+
+
+v0.8.1 (2013-01-19)
+================================================================================
+
+- The `connections` client option can now accept a callable object returning
+  an instance of `Predis\Connection\ConnectionFactoryInterface`.
+
+- Client options accepting callable objects as factories now pass their actual
+  instance to the callable as the second argument.
+
+- `Predis\Command\Processor\KeyPrefixProcessor` can now be directly casted to
+  string to obtain the current prefix, useful with string interpolation.
+
+- Added an optional callable argument to `Predis\Cluster\Distribution\HashRing`
+  and `Predis\Cluster\Distribution\KetamaPureRing` constructor that can be used
+  to customize how the distributor should extract the connection hash when
+  initializing the nodes distribution (ISSUE #36).
+
+- Correctly handle `TTL` and `PTTL` returning -2 on non existing keys starting
+  with Redis 2.8.
+
+- __FIX__: a missing use directive in `Predis\Transaction\MultiExecContext`
+  caused PHP errors when Redis did not return `+QUEUED` replies to commands
+  when inside a MULTI / EXEC context.
+
+- __FIX__: the `parseResponse()` method implemented for a scripted command was
+  ignored when retrying to execute a Lua script by falling back to `EVAL` after
+  a `-NOSCRIPT` error (ISSUE #94).
+
+- __FIX__: when subclassing `Predis\Client` the `getClientFor()` method returns
+  a new instance of the subclass instead of a new instance of `Predis\Client`.
+
+
 v0.8.0 (2012-10-23)
-===============================================================================
+================================================================================
 
 - The default server profile for Redis is now `2.6`.
 
@@ -64,7 +211,7 @@ v0.8.0 (2012-10-23)
 
 
 v0.7.3 (2012-06-01)
-===============================================================================
+================================================================================
 
 - New commands available in the Redis v2.6 profile (dev): `BITOP`, `BITCOUNT`.
 
@@ -86,7 +233,7 @@ v0.7.3 (2012-06-01)
 
 
 v0.7.2 (2012-04-01)
-===============================================================================
+================================================================================
 
 - Added `2.6` in the server profiles aliases list for the upcoming Redis 2.6.
   `2.4` is still the default server profile. `dev` now targets Redis 2.8.
@@ -104,7 +251,7 @@ v0.7.2 (2012-04-01)
 
 
 v0.7.1 (2011-12-27)
-===============================================================================
+================================================================================
 
 - The PEAR channel on PearHub has been deprecated in favour of `pear.nrk.io`.
 
@@ -123,7 +270,7 @@ v0.7.1 (2011-12-27)
 
 
 v0.7.0 (2011-12-11)
-===============================================================================
+================================================================================
 
 - Predis now adheres to the PSR-0 standard which means that there is no more a
   single file holding all the classes of the library, but multiple files (one
@@ -197,7 +344,7 @@ v0.7.0 (2011-12-11)
 
 
 v0.6.6 (2011-04-01)
-===============================================================================
+================================================================================
 
 - Switched to Redis 2.2 as the default server profile (there are no changes
   that would break compatibility with previous releases). Long command names
@@ -236,7 +383,7 @@ v0.6.6 (2011-04-01)
 
 
 v0.6.5 (2011-02-12)
-===============================================================================
+================================================================================
 
 - __FIX__: due to an untested internal change introduced in v0.6.4, a wrong
   handling of bulk reads of zero-length values was producing protocol
@@ -244,7 +391,7 @@ v0.6.5 (2011-02-12)
 
 
 v0.6.4 (2011-02-12)
-===============================================================================
+================================================================================
 
 - Various performance improvements (15% ~ 25%) especially when dealing with
   long multibulk replies or when using clustered connections.
@@ -258,7 +405,7 @@ v0.6.4 (2011-02-12)
 
 
 v0.6.3 (2011-01-01)
-===============================================================================
+================================================================================
 
 - New commands available in the Redis v2.2 profile (dev):
   - Strings: `SETRANGE`, `GETRANGE`, `SETBIT`, `GETBIT`
@@ -272,7 +419,7 @@ v0.6.3 (2011-01-01)
 
 
 v0.6.2 (2010-11-28)
-===============================================================================
+================================================================================
 
 - Minor internal improvements and clean ups.
 
@@ -297,7 +444,7 @@ v0.6.2 (2010-11-28)
 
 
 v0.6.1 (2010-07-11)
-===============================================================================
+================================================================================
 
 - Minor internal improvements and clean ups.
 
@@ -339,7 +486,7 @@ v0.6.1 (2010-07-11)
 
 
 v0.6.0 (2010-05-24)
-===============================================================================
+================================================================================
 
 - Switched to the new multi-bulk request protocol for all of the commands
   in the Redis 1.2 and Redis 2.0 profiles. Inline and bulk requests are now
@@ -351,7 +498,7 @@ v0.6.0 (2010-05-24)
   to instances of Redis 1.2.x).
 
 - Support for Redis 1.0 is now optional and it is provided by requiring
-  'Predis_Compatibility.php' before creating an instance of Predis\Client.
+  'Predis_Compatibility.php' before creating an instance of `Predis\Client`.
 
 - New commands added to the Redis 2.0 profile since Predis 0.5.1:
   - Strings: `SETEX`, `APPEND`, `SUBSTR`
@@ -364,7 +511,7 @@ v0.6.0 (2010-05-24)
 
 - Introduced client-level options with the new `Predis\ClientOptions` class.
   Options can be passed to the constructor of `Predis\Client` in its second
-  argument as an array or an instance of Predis\ClientOptions. For brevity's
+  argument as an array or an instance of `Predis\ClientOptions`. For brevity's
   sake and compatibility with older versions, the constructor still accepts
   an instance of `Predis\RedisServerProfile` in its second argument. The
   currently supported client options are:
@@ -454,7 +601,7 @@ v0.6.0 (2010-05-24)
 
 
 v0.5.1 (2010-01-23)
-===============================================================================
+================================================================================
 
 * `RPOPLPUSH` has been changed from bulk command to inline command in Redis
   1.2.1, so `ListPopLastPushHead` now extends `InlineCommand`. The old behavior
@@ -469,5 +616,5 @@ v0.5.1 (2010-01-23)
 
 
 v0.5.0 (2010-01-09)
-===============================================================================
+================================================================================
 * First versioned release of Predis

@@ -24,7 +24,7 @@ class ClientReplication extends AbstractOption
     /**
      * Checks if the specified value is a valid instance of ReplicationConnectionInterface.
      *
-     * @param ReplicationConnectionInterface $connection Instance of a replication connection.
+     * @param  ReplicationConnectionInterface $connection Instance of a replication connection.
      * @return ReplicationConnectionInterface
      */
     protected function checkInstance($connection)
@@ -42,7 +42,7 @@ class ClientReplication extends AbstractOption
     public function filter(ClientOptionsInterface $options, $value)
     {
         if (is_callable($value)) {
-            $connection = call_user_func($value, $options);
+            $connection = call_user_func($value, $options, $this);
 
             if (!$connection instanceof ReplicationConnectionInterface) {
                 throw new \InvalidArgumentException('Instance of Predis\Connection\ReplicationConnectionInterface expected');

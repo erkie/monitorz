@@ -13,7 +13,7 @@ namespace Predis\PubSub;
 
 use Predis\ClientException;
 use Predis\ClientInterface;
-use Predis\Helpers;
+use Predis\Command\AbstractCommand as Command;
 use Predis\NotSupportedException;
 use Predis\Connection\AggregatedConnectionInterface;
 
@@ -28,8 +28,8 @@ class PubSubContext extends AbstractPubSubContext
     private $options;
 
     /**
-     * @param ClientInterface Client instance used by the context.
-     * @param array Options for the context initialization.
+     * @param ClientInterface $client  Client instance used by the context.
+     * @param array           $options Options for the context initialization.
      */
     public function __construct(ClientInterface $client, Array $options = null)
     {
@@ -42,10 +42,20 @@ class PubSubContext extends AbstractPubSubContext
     }
 
     /**
+     * Returns the underlying client instance used by the pub/sub iterator.
+     *
+     * @return ClientInterface
+     */
+    public function getClient()
+    {
+        return $this->client;
+    }
+
+    /**
      * Checks if the passed client instance satisfies the required conditions
      * needed to initialize a Publish / Subscribe context.
      *
-     * @param ClientInterface Client instance used by the context.
+     * @param ClientInterface $client Client instance used by the context.
      */
     private function checkCapabilities(ClientInterface $client)
     {
@@ -77,7 +87,7 @@ class PubSubContext extends AbstractPubSubContext
      */
     protected function writeCommand($method, $arguments)
     {
-        $arguments = Helpers::filterArrayArguments($arguments);
+        $arguments = Command::normalizeArguments($arguments);
         $command = $this->client->createCommand($method, $arguments);
         $this->client->getConnection()->writeCommand($command);
     }
@@ -105,6 +115,8 @@ class PubSubContext extends AbstractPubSubContext
                 if ($response[2] === 0) {
                     $this->invalidate();
                 }
+                // The missing break here is intentional as we must process
+                // subscriptions and unsubscriptions as standard messages.
 
             case self::MESSAGE:
                 return (object) array(

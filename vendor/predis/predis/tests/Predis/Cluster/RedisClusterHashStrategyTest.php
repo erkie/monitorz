@@ -11,14 +11,13 @@
 
 namespace Predis\Cluster;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
+use PredisTestCase;
 use Predis\Profile\ServerProfile;
 
 /**
  *
  */
-class RedisClusterHashStrategyTest extends StandardTestCase
+class RedisClusterHashStrategyTest extends PredisTestCase
 {
     /**
      * @group disconnected
@@ -186,7 +185,7 @@ class RedisClusterHashStrategyTest extends StandardTestCase
         $command->expects($this->once())
                 ->method('getScript')
                 ->will($this->returnValue('return true'));
-        $command->expects($this->exactly(1))
+        $command->expects($this->exactly(2))
                 ->method('getKeysCount')
                 ->will($this->returnValue(1));
         $command->setArguments($arguments);
@@ -251,7 +250,7 @@ class RedisClusterHashStrategyTest extends StandardTestCase
     /**
      * Returns the list of expected supported commands.
      *
-     * @param string $type Optional type of command (based on its keys)
+     * @param  string $type Optional type of command (based on its keys)
      * @return array
      */
     protected function getExpectedCommands($type = null)
@@ -314,6 +313,7 @@ class RedisClusterHashStrategyTest extends StandardTestCase
             'SCARD'                 => 'keys-first',
             'SISMEMBER'             => 'keys-first',
             'SMEMBERS'              => 'keys-first',
+            'SSCAN'                 => 'keys-first',
             'SPOP'                  => 'keys-first',
             'SRANDMEMBER'           => 'keys-first',
             'SREM'                  => 'keys-first',
@@ -333,6 +333,7 @@ class RedisClusterHashStrategyTest extends StandardTestCase
             'ZREVRANGEBYSCORE'      => 'keys-first',
             'ZREVRANK'              => 'keys-first',
             'ZSCORE'                => 'keys-first',
+            'ZSCAN'                 => 'keys-first',
 
             /* commands operating on hashes */
             'HDEL'                  => 'keys-first',
@@ -340,6 +341,7 @@ class RedisClusterHashStrategyTest extends StandardTestCase
             'HGET'                  => 'keys-first',
             'HGETALL'               => 'keys-first',
             'HMGET'                 => 'keys-first',
+            'HMSET'                 => 'keys-first',
             'HINCRBY'               => 'keys-first',
             'HINCRBYFLOAT'          => 'keys-first',
             'HKEYS'                 => 'keys-first',
@@ -347,6 +349,7 @@ class RedisClusterHashStrategyTest extends StandardTestCase
             'HSET'                  => 'keys-first',
             'HSETNX'                => 'keys-first',
             'HVALS'                 => 'keys-first',
+            'HSCAN'                 => 'keys-first',
 
             /* scripting */
             'EVAL'                  => 'keys-script',

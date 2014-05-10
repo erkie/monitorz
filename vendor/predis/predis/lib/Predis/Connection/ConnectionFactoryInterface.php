@@ -11,8 +11,6 @@
 
 namespace Predis\Connection;
 
-use Predis\Profile\ServerProfileInterface;
-
 /**
  * Interface that must be implemented by classes that provide their own mechanism
  * to create and initialize new instances of Predis\Connection\SingleConnectionInterface.
@@ -24,8 +22,8 @@ interface ConnectionFactoryInterface
     /**
      * Defines or overrides the connection class identified by a scheme prefix.
      *
-     * @param string $scheme URI scheme identifying the connection class.
-     * @param mixed $initializer FQN of a connection class or a callable object for lazy initialization.
+     * @param string $scheme      URI scheme identifying the connection class.
+     * @param mixed  $initializer FQN of a connection class or a callable object for lazy initialization.
      */
     public function define($scheme, $initializer);
 
@@ -39,17 +37,17 @@ interface ConnectionFactoryInterface
     /**
      * Creates a new connection object.
      *
-     * @param mixed $parameters Parameters for the connection.
-     * @return Predis\Connection\SingleConnectionInterface
+     * @param  mixed                     $parameters Parameters for the connection.
+     * @return SingleConnectionInterface
      */
     public function create($parameters);
 
     /**
      * Prepares an aggregation of connection objects.
      *
-     * @param AggregatedConnectionInterface Instance of an aggregated connection class.
-     * @param array $parameters List of parameters for each connection object.
-     * @return Predis\Connection\AggregatedConnectionInterface
+     * @param  AggregatedConnectionInterface $cluster    Instance of an aggregated connection class.
+     * @param  array                         $parameters List of parameters for each connection object.
+     * @return AggregatedConnectionInterface
      */
     public function createAggregated(AggregatedConnectionInterface $cluster, Array $parameters);
 }

@@ -12,7 +12,10 @@
 namespace Predis\Command;
 
 /**
- * @link http://redis.io/commands/client
+ * @link http://redis.io/commands/client-list
+ * @link http://redis.io/commands/client-kill
+ * @link http://redis.io/commands/client-getname
+ * @link http://redis.io/commands/client-setname
  * @author Daniele Alessandri <suppakilla@gmail.com>
  */
 class ServerClient extends AbstractCommand
@@ -35,8 +38,9 @@ class ServerClient extends AbstractCommand
         switch (strtoupper($args[0])) {
             case 'LIST':
                 return $this->parseClientList($data);
-
             case 'KILL':
+            case 'GETNAME':
+            case 'SETNAME':
             default:
                 return $data;
         }
@@ -46,7 +50,7 @@ class ServerClient extends AbstractCommand
      * Parses the reply buffer and returns the list of clients returned by
      * the CLIENT LIST command.
      *
-     * @param string $data Reply buffer
+     * @param  string $data Reply buffer
      * @return array
      */
     protected function parseClientList($data)

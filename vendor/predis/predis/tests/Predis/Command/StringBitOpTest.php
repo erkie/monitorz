@@ -11,13 +11,11 @@
 
 namespace Predis\Command;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
 /**
  * @group commands
  * @group realm-string
  */
-class StringBitOpTest extends CommandTestCase
+class StringBitOpTest extends PredisCommandTestCase
 {
     /**
      * {@inheritdoc}
@@ -88,6 +86,17 @@ class StringBitOpTest extends CommandTestCase
         $command->prefixKeys('prefix:');
 
         $this->assertSame($expected, $command->getArguments());
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testPrefixKeysIgnoredOnEmptyArguments()
+    {
+        $command = $this->getCommand();
+        $command->prefixKeys('prefix:');
+
+        $this->assertSame(array(), $command->getArguments());
     }
 
     /**
@@ -168,7 +177,7 @@ class StringBitOpTest extends CommandTestCase
     /**
      * @group connected
      * @expectedException Predis\ServerException
-     * @expectedExceptionMessage ERR Operation against a key holding the wrong kind of value
+     * @expectedExceptionMessage Operation against a key holding the wrong kind of value
      */
     public function testThrowsExceptionOnInvalidSourceKey()
     {

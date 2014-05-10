@@ -11,22 +11,23 @@
 
 namespace Predis\Cluster;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
+use PredisTestCase;
 use Predis\Cluster\Distribution\HashRing;
 use Predis\Profile\ServerProfile;
 
 /**
  *
  */
-class PredisClusterHashStrategyTest extends StandardTestCase
+class PredisClusterHashStrategyTest extends PredisTestCase
 {
     /**
      * @group disconnected
      */
     public function testSupportsKeyTags()
     {
-        $expected = -1938594527;
+        // NOTE: 32 and 64 bits PHP runtimes can produce different hash values.
+        $expected = PHP_INT_SIZE == 4 ? -1938594527 : 2356372769;
+
         $strategy = $this->getHashStrategy();
 
         $this->assertSame($expected, $strategy->getKeyHash('{foo}'));
@@ -243,7 +244,7 @@ class PredisClusterHashStrategyTest extends StandardTestCase
     /**
      * Returns the list of expected supported commands.
      *
-     * @param string $type Optional type of command (based on its keys)
+     * @param  string $type Optional type of command (based on its keys)
      * @return array
      */
     protected function getExpectedCommands($type = null)
@@ -261,6 +262,8 @@ class PredisClusterHashStrategyTest extends StandardTestCase
             'TTL'                   => 'keys-first',
             'PTTL'                  => 'keys-first',
             'SORT'                  => 'keys-first', // TODO
+            'DUMP'                  => 'keys-first',
+            'RESTORE'               => 'keys-first',
 
             /* commands operating on string values */
             'APPEND'                => 'keys-first',
@@ -315,6 +318,7 @@ class PredisClusterHashStrategyTest extends StandardTestCase
             'SUNIONSTORE'           => 'keys-all',
             'SISMEMBER'             => 'keys-first',
             'SMEMBERS'              => 'keys-first',
+            'SSCAN'                 => 'keys-first',
             'SPOP'                  => 'keys-first',
             'SRANDMEMBER'           => 'keys-first',
             'SREM'                  => 'keys-first',
@@ -336,6 +340,7 @@ class PredisClusterHashStrategyTest extends StandardTestCase
             'ZREVRANK'              => 'keys-first',
             'ZSCORE'                => 'keys-first',
             'ZUNIONSTORE'           => 'keys-zaggregated',
+            'ZSCAN'                 => 'keys-first',
 
             /* commands operating on hashes */
             'HDEL'                  => 'keys-first',
@@ -343,6 +348,7 @@ class PredisClusterHashStrategyTest extends StandardTestCase
             'HGET'                  => 'keys-first',
             'HGETALL'               => 'keys-first',
             'HMGET'                 => 'keys-first',
+            'HMSET'                 => 'keys-first',
             'HINCRBY'               => 'keys-first',
             'HINCRBYFLOAT'          => 'keys-first',
             'HKEYS'                 => 'keys-first',
@@ -350,6 +356,7 @@ class PredisClusterHashStrategyTest extends StandardTestCase
             'HSET'                  => 'keys-first',
             'HSETNX'                => 'keys-first',
             'HVALS'                 => 'keys-first',
+            'HSCAN'                 => 'keys-first',
 
             /* scripting */
             'EVAL'                  => 'keys-script',

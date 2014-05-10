@@ -12,7 +12,6 @@
 namespace Predis\Connection;
 
 use Predis\ClientException;
-use Predis\Option\OptionInterface;
 
 /**
  * Handles parsing and validation of connection parameters.
@@ -28,16 +27,15 @@ class ConnectionParameters implements ConnectionParametersInterface
         'host' => '127.0.0.1',
         'port' => 6379,
         'timeout' => 5.0,
-        'iterable_multibulk' => false,
     );
 
     /**
-     * @param string|array Connection parameters in the form of an URI string or a named array.
+     * @param string|array $parameters Connection parameters in the form of an URI string or a named array.
      */
     public function __construct($parameters = array())
     {
         if (!is_array($parameters)) {
-            $parameters = $this->parseURI($parameters);
+            $parameters = self::parseURI($parameters);
         }
 
         $this->parameters = $this->filter($parameters) + $this->getDefaults();
@@ -73,8 +71,8 @@ class ConnectionParameters implements ConnectionParametersInterface
     /**
      * Validates value as boolean.
      *
-     * @param mixed $value Input value.
-     * @return boolean
+     * @param  mixed $value Input value.
+     * @return bool
      */
     private static function castBoolean($value)
     {
@@ -84,7 +82,7 @@ class ConnectionParameters implements ConnectionParametersInterface
     /**
      * Validates value as float.
      *
-     * @param mixed $value Input value.
+     * @param  mixed $value Input value.
      * @return float
      */
     private static function castFloat($value)
@@ -95,7 +93,7 @@ class ConnectionParameters implements ConnectionParametersInterface
     /**
      * Validates value as integer.
      *
-     * @param mixed $value Input value.
+     * @param  mixed $value Input value.
      * @return int
      */
     private static function castInteger($value)
@@ -106,27 +104,25 @@ class ConnectionParameters implements ConnectionParametersInterface
     /**
      * Parses an URI string and returns an array of connection parameters.
      *
-     * @param string $uri Connection string.
+     * @param  string $uri Connection string.
      * @return array
      */
-    private function parseURI($uri)
+    public static function parseURI($uri)
     {
         if (stripos($uri, 'unix') === 0) {
             // Hack to support URIs for UNIX sockets with minimal effort.
             $uri = str_ireplace('unix:///', 'unix://localhost/', $uri);
         }
 
-        if (($parsed = @parse_url($uri)) === false || !isset($parsed['host'])) {
+        if (!($parsed = @parse_url($uri)) || !isset($parsed['host'])) {
             throw new ClientException("Invalid URI: $uri");
         }
 
         if (isset($parsed['query'])) {
-            foreach (explode('&', $parsed['query']) as $kv) {
-                @list($k, $v) = explode('=', $kv);
-                $parsed[$k] = $v;
-            }
-
+            parse_str($parsed['query'], $queryarray);
             unset($parsed['query']);
+
+            $parsed = array_merge($parsed, $queryarray);
         }
 
         return $parsed;
@@ -135,12 +131,12 @@ class ConnectionParameters implements ConnectionParametersInterface
     /**
      * Validates and converts each value of the connection parameters array.
      *
-     * @param array $parameters Connection parameters.
+     * @param  array $parameters Connection parameters.
      * @return array
      */
     private function filter(Array $parameters)
     {
-        if (count($parameters) > 0) {
+        if ($parameters) {
             $casters = array_intersect_key($this->getValueCasters(), $parameters);
 
             foreach ($casters as $parameter => $caster) {

@@ -11,14 +11,10 @@
 
 namespace Predis\Connection;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
-use Predis\Profile\ServerProfile;
-
 /**
  *
  */
-class StreamConnectionTest extends ConnectionTestCase
+class StreamConnectionTest extends PredisConnectionTestCase
 {
     /**
      * @group disconnected
@@ -68,6 +64,24 @@ class StreamConnectionTest extends ConnectionTestCase
     // ******************************************************************** //
     // ---- INTEGRATION TESTS --------------------------------------------- //
     // ******************************************************************** //
+
+    /**
+     * @group connected
+     */
+    public function testAcceptsTcpNodelayParameter()
+    {
+        if (!version_compare(PHP_VERSION, '5.4.0', '>=')) {
+            $this->markTestSkipped('Setting TCP_NODELAY on PHP socket streams works on PHP >= 5.4.0');
+        }
+
+        $connection = new StreamConnection($this->getParameters(array('tcp_nodelay' => false)));
+        $connection->connect();
+        $this->assertTrue($connection->isConnected());
+
+        $connection = new StreamConnection($this->getParameters(array('tcp_nodelay' => true)));
+        $connection->connect();
+        $this->assertTrue($connection->isConnected());
+    }
 
     /**
      * @group connected

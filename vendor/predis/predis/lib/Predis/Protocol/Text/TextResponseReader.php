@@ -11,7 +11,7 @@
 
 namespace Predis\Protocol\Text;
 
-use Predis\Helpers;
+use Predis\CommunicationException;
 use Predis\Connection\ComposableConnectionInterface;
 use Predis\Protocol\ProtocolException;
 use Predis\Protocol\ResponseHandlerInterface;
@@ -55,7 +55,7 @@ class TextResponseReader implements ResponseReaderInterface
      * Sets a response handler for a certain prefix that identifies a type of
      * reply that can be returned by Redis.
      *
-     * @param string $prefix Identifier for a type of reply.
+     * @param string                   $prefix  Identifier for a type of reply.
      * @param ResponseHandlerInterface $handler Response handler for the reply.
      */
     public function setHandler($prefix, ResponseHandlerInterface $handler)
@@ -67,7 +67,7 @@ class TextResponseReader implements ResponseReaderInterface
      * Returns the response handler associated to a certain type of reply that
      * can be returned by Redis.
      *
-     * @param string $prefix Identifier for a type of reply.
+     * @param  string                   $prefix Identifier for a type of reply.
      * @return ResponseHandlerInterface
      */
     public function getHandler($prefix)
@@ -104,10 +104,10 @@ class TextResponseReader implements ResponseReaderInterface
      * reply from a connection to Redis.
      *
      * @param ComposableConnectionInterface $connection Connection to Redis that generated the error.
-     * @param string $message Error message.
+     * @param string                        $message    Error message.
      */
     private function protocolError(ComposableConnectionInterface $connection, $message)
     {
-        Helpers::onCommunicationException(new ProtocolException($connection, $message));
+        CommunicationException::handle(new ProtocolException($connection, $message));
     }
 }

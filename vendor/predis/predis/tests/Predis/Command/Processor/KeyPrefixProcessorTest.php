@@ -11,12 +11,12 @@
 
 namespace Predis\Command\Processor;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
+use PredisTestCase;
 
 /**
  *
  */
-class KeyPrefixProcessorTest extends StandardTestCase
+class KeyPrefixProcessorTest extends PredisTestCase
 {
     /**
      * @group disconnected
@@ -51,13 +51,14 @@ class KeyPrefixProcessorTest extends StandardTestCase
     public function testProcessPrefixableCommands()
     {
         $prefix = 'prefix:';
-        $unprefixed = 'key';
-        $expected = "$prefix$unprefixed";
 
         $command = $this->getMock('Predis\Command\PrefixableCommand');
         $command->expects($this->once())
                 ->method('prefixKeys')
                 ->with($prefix);
+        $command->expects($this->once())
+                ->method('getArguments')
+                ->will($this->returnValue('key'));
 
         $processor = new KeyPrefixProcessor($prefix);
 
@@ -67,7 +68,23 @@ class KeyPrefixProcessorTest extends StandardTestCase
     /**
      * @group disconnected
      */
-    public function testProcessNotPrefixableCommands()
+    public function testSkipPrefixableCommandsWithNoArguments()
+    {
+        $prefix = 'prefix:';
+
+        $command = $this->getMock('Predis\Command\PrefixableCommand');
+        $command->expects($this->never())
+                ->method('prefixKeys');
+
+        $processor = new KeyPrefixProcessor($prefix);
+
+        $processor->process($command);
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testSkipNotPrefixableCommands()
     {
         $prefix = 'prefix:';
         $unprefixed = 'key';
@@ -79,5 +96,16 @@ class KeyPrefixProcessorTest extends StandardTestCase
         $processor = new KeyPrefixProcessor($prefix);
 
         $processor->process($command);
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testInstanceCanBeCastedToString()
+    {
+        $prefix = 'prefix:';
+        $processor = new KeyPrefixProcessor($prefix);
+
+        $this->assertEquals($prefix, (string) $processor);
     }
 }

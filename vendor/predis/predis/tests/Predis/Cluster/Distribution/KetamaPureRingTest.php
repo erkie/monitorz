@@ -14,7 +14,7 @@ namespace Predis\Cluster\Distribution;
 /**
  * @todo To be improved.
  */
-class KetamaPureRingTest extends DistributionStrategyTestCase
+class KetamaPureRingTest extends PredisDistributorTestCase
 {
     /**
      * {@inheritdoc}
@@ -129,5 +129,25 @@ class KetamaPureRingTest extends DistributionStrategyTestCase
         $this->assertSame($expected1, $actual1);
         $this->assertSame($expected2, $actual2);
         $this->assertSame($expected3, $actual3);
+    }
+
+    /**
+     * @todo This tests should be moved in Predis\Cluster\Distribution\DistributionStrategyTestCase
+     * @group disconnected
+     */
+    public function testCallbackToGetNodeHash()
+    {
+        $node = '127.0.0.1:7000';
+        $callable = $this->getMock('stdClass', array('__invoke'));
+
+        $callable->expects($this->once())
+                 ->method('__invoke')
+                 ->with($node)
+                 ->will($this->returnValue($node));
+
+        $ring = new KetamaPureRing($callable);
+        $ring->add($node);
+
+        $this->getNodes($ring);
     }
 }

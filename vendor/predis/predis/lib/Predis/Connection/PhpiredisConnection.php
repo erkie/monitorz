@@ -11,7 +11,6 @@
 
 namespace Predis\Connection;
 
-use Predis\ClientException;
 use Predis\NotSupportedException;
 use Predis\ResponseError;
 use Predis\ResponseQueued;
@@ -38,10 +37,11 @@ use Predis\Command\CommandInterface;
  *  - scheme: it can be either 'tcp' or 'unix'.
  *  - host: hostname or IP address of the server.
  *  - port: TCP port of the server.
+ *  - path: path of a UNIX domain socket when scheme is 'unix'.
  *  - timeout: timeout to perform the connection.
  *  - read_write_timeout: timeout of read / write operations.
  *
- * @link http://github.com/seppo0010/phpiredis
+ * @link http://github.com/nrk/phpiredis
  * @author Daniele Alessandri <suppakilla@gmail.com>
  */
 class PhpiredisConnection extends AbstractConnection
@@ -90,10 +90,10 @@ class PhpiredisConnection extends AbstractConnection
      */
     protected function checkParameters(ConnectionParametersInterface $parameters)
     {
-        if ($parameters->iterable_multibulk === true) {
+        if (isset($parameters->iterable_multibulk)) {
             $this->onInvalidOption('iterable_multibulk', $parameters);
         }
-        if ($parameters->persistent === true) {
+        if (isset($parameters->persistent)) {
             $this->onInvalidOption('persistent', $parameters);
         }
 
@@ -137,7 +137,6 @@ class PhpiredisConnection extends AbstractConnection
     /**
      * Gets the handler used by the protocol reader to handle Redis errors.
      *
-     * @param Boolean $throw_errors Specify if Redis errors throw exceptions.
      * @return \Closure
      */
     private function getErrorHandler()
@@ -184,7 +183,7 @@ class PhpiredisConnection extends AbstractConnection
     /**
      * Sets options on the socket resource from the connection parameters.
      *
-     * @param resource $socket Socket resource.
+     * @param resource                      $socket     Socket resource.
      * @param ConnectionParametersInterface $parameters Parameters used to initialize the connection.
      */
     private function setSocketOptions($socket, ConnectionParametersInterface $parameters)
@@ -224,10 +223,10 @@ class PhpiredisConnection extends AbstractConnection
     /**
      * Gets the address from the connection parameters.
      *
-     * @param ConnectionParametersInterface $parameters Parameters used to initialize the connection.
+     * @param  ConnectionParametersInterface $parameters Parameters used to initialize the connection.
      * @return string
      */
-    private function getAddress(ConnectionParametersInterface $parameters)
+    protected static function getAddress(ConnectionParametersInterface $parameters)
     {
         if ($parameters->scheme === 'unix') {
             return $parameters->path;
@@ -236,10 +235,11 @@ class PhpiredisConnection extends AbstractConnection
         $host = $parameters->host;
 
         if (ip2long($host) === false) {
-            if (($address = gethostbyname($host)) === $host) {
-                $this->onConnectionError("Cannot resolve the address of $host");
+            if (false === $addresses = gethostbynamel($host)) {
+                return false;
             }
-            return $address;
+
+            return $addresses[array_rand($addresses)];
         }
 
         return $host;
@@ -248,12 +248,15 @@ class PhpiredisConnection extends AbstractConnection
     /**
      * Opens the actual connection to the server with a timeout.
      *
-     * @param ConnectionParametersInterface $parameters Parameters used to initialize the connection.
+     * @param  ConnectionParametersInterface $parameters Parameters used to initialize the connection.
      * @return string
      */
     private function connectWithTimeout(ConnectionParametersInterface $parameters)
     {
-        $host = self::getAddress($parameters);
+        if (false === $host = self::getAddress($parameters)) {
+            $this->onConnectionError("Cannot resolve the address of '$parameters->host'.");
+        }
+
         $socket = $this->getResource();
 
         socket_set_nonblock($socket);
@@ -296,7 +299,7 @@ class PhpiredisConnection extends AbstractConnection
 
         $this->connectWithTimeout($this->parameters);
 
-        if (count($this->initCmds) > 0) {
+        if ($this->initCmds) {
             $this->sendInitializationCommands();
         }
     }
@@ -328,7 +331,7 @@ class PhpiredisConnection extends AbstractConnection
     /**
      * {@inheritdoc}
      */
-    private function write($buffer)
+    protected function write($buffer)
     {
         $socket = $this->getResource();
 

@@ -11,15 +11,14 @@
 
 namespace Predis\Option;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
+use PredisTestCase;
 use Predis\Command\Processor\KeyPrefixProcessor;
 use Predis\Profile\ServerProfile;
 
 /**
  *
  */
-class ClientProfileTest extends StandardTestCase
+class ClientProfileTest extends PredisTestCase
 {
     /**
      * @group disconnected
@@ -59,16 +58,16 @@ class ClientProfileTest extends StandardTestCase
     {
         $value = $this->getMock('Predis\Profile\ServerProfileInterface');
 
-        $initializer = $this->getMock('stdClass', array('__invoke'));
-        $initializer->expects($this->once())
-                    ->method('__invoke')
-                    ->with($this->isInstanceOf('Predis\Option\ClientOptionsInterface'))
-                    ->will($this->returnValue($value));
-
         $options = $this->getMock('Predis\Option\ClientOptionsInterface');
         $option = new ClientProfile();
 
-        $profile = $option->filter($options, $initializer);
+        $initializer = $this->getMock('stdClass', array('__invoke'));
+        $initializer->expects($this->once())
+                    ->method('__invoke')
+                    ->with($this->isInstanceOf('Predis\Option\ClientOptionsInterface'), $option)
+                    ->will($this->returnValue($value));
+
+        $profile = $option->filter($options, $initializer, $option);
 
         $this->assertInstanceOf('Predis\Profile\ServerProfileInterface', $profile);
         $this->assertSame($value, $profile);

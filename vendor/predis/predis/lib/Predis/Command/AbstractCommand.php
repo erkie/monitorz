@@ -24,7 +24,7 @@ abstract class AbstractCommand implements CommandInterface
     /**
      * Returns a filtered array of the arguments.
      *
-     * @param array $arguments List of arguments.
+     * @param  array $arguments List of arguments.
      * @return array
      */
     protected function filterArguments(Array $arguments)
@@ -42,9 +42,7 @@ abstract class AbstractCommand implements CommandInterface
     }
 
     /**
-     * Sets the arguments array without filtering.
-     *
-     * @param array $arguments List of arguments.
+     * {@inheritdoc}
      */
     public function setRawArguments(Array $arguments)
     {
@@ -61,13 +59,11 @@ abstract class AbstractCommand implements CommandInterface
     }
 
     /**
-     * Gets the argument from the arguments list at the specified index.
-     *
-     * @param array $arguments Position of the argument.
+     * {@inheritdoc}
      */
-    public function getArgument($index = 0)
+    public function getArgument($index)
     {
-        if (isset($this->arguments[$index]) === true) {
+        if (isset($this->arguments[$index])) {
             return $this->arguments[$index];
         }
     }
@@ -101,8 +97,8 @@ abstract class AbstractCommand implements CommandInterface
     /**
      * Helper function used to reduce a list of arguments to a string.
      *
-     * @param string $accumulator Temporary string.
-     * @param string $argument Current argument.
+     * @param  string $accumulator Temporary string.
+     * @param  string $argument    Current argument.
      * @return string
      */
     protected function toStringArgumentReducer($accumulator, $argument)
@@ -128,5 +124,35 @@ abstract class AbstractCommand implements CommandInterface
             array($this, 'toStringArgumentReducer'),
             $this->getId()
         );
+    }
+
+    /**
+     * Normalizes the arguments array passed to a Redis command.
+     *
+     * @param  array $arguments Arguments for a command.
+     * @return array
+     */
+    public static function normalizeArguments(Array $arguments)
+    {
+        if (count($arguments) === 1 && is_array($arguments[0])) {
+            return $arguments[0];
+        }
+
+        return $arguments;
+    }
+
+    /**
+     * Normalizes the arguments array passed to a variadic Redis command.
+     *
+     * @param  array $arguments Arguments for a command.
+     * @return array
+     */
+    public static function normalizeVariadic(Array $arguments)
+    {
+        if (count($arguments) === 2 && is_array($arguments[1])) {
+            return array_merge(array($arguments[0]), $arguments[1]);
+        }
+
+        return $arguments;
     }
 }

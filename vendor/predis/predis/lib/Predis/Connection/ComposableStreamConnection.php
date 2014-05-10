@@ -27,16 +27,12 @@ class ComposableStreamConnection extends StreamConnection implements ComposableC
 
     /**
      * @param ConnectionParametersInterface $parameters Parameters used to initialize the connection.
-     * @param ProtocolInterface $protocol A protocol processor.
+     * @param ProtocolInterface             $protocol   A protocol processor.
      */
     public function __construct(ConnectionParametersInterface $parameters, ProtocolInterface $protocol = null)
     {
-        $protocol = $protocol ?: new TextProtocol();
-        $protocol->setOption('iterable_multibulk', $parameters->iterable_multibulk);
-
-        $this->mbiterable = null;
-        $this->protocol = $protocol;
         $this->parameters = $this->checkParameters($parameters);
+        $this->protocol = $protocol ?: new TextProtocol();
     }
 
     /**
@@ -134,6 +130,6 @@ class ComposableStreamConnection extends StreamConnection implements ComposableC
      */
     public function __sleep()
     {
-        return array_merge(parent::__sleep(), array('protocol'));
+        return array_diff(array_merge(parent::__sleep(), array('protocol')), array('mbiterable'));
     }
 }

@@ -11,13 +11,12 @@
 
 namespace Predis\Connection;
 
-use \PHPUnit_Framework_TestCase as StandardTestCase;
-
+use PredisTestCase;
 /**
  * @todo ConnectionParameters::define();
  * @todo ConnectionParameters::undefine();
  */
-class ParametersTest extends StandardTestCase
+class ParametersTest extends PredisTestCase
 {
     /**
      * @group disconnected
@@ -30,7 +29,6 @@ class ParametersTest extends StandardTestCase
         $this->assertEquals($defaults['scheme'], $parameters->scheme);
         $this->assertEquals($defaults['host'], $parameters->host);
         $this->assertEquals($defaults['port'], $parameters->port);
-        $this->assertEquals($defaults['iterable_multibulk'], $parameters->iterable_multibulk);
         $this->assertEquals($defaults['timeout'], $parameters->timeout);
     }
 
@@ -124,6 +122,104 @@ class ParametersTest extends StandardTestCase
         $this->assertNull($unserialized->unknown);
     }
 
+    /**
+     * @group disconnected
+     */
+    public function testParsingURI()
+    {
+        $uri = 'tcp://10.10.10.10:6400?timeout=0.5&persistent=1';
+
+        $expected = array(
+            'scheme' => 'tcp',
+            'host' => '10.10.10.10',
+            'port' => 6400,
+            'timeout' => '0.5',
+            'persistent' => '1',
+        );
+
+        $this->assertSame($expected, ConnectionParameters::parseURI($uri));
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testParsingUnixDomainURI()
+    {
+        $uri = 'unix:///tmp/redis.sock?timeout=0.5&persistent=1';
+
+        $expected = array(
+            'scheme' => 'unix',
+            'host' => 'localhost',
+            'path' => '/tmp/redis.sock',
+            'timeout' => '0.5',
+            'persistent' => '1',
+        );
+
+        $this->assertSame($expected, ConnectionParameters::parseURI($uri));
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testParsingURIWithIncompletePairInQueryString()
+    {
+        $uri = 'tcp://10.10.10.10?persistent=1&foo=&bar';
+
+        $expected = array(
+            'scheme' => 'tcp',
+            'host' => '10.10.10.10',
+            'persistent' => '1',
+            'foo' => '',
+            'bar' => '',
+        );
+
+        $this->assertSame($expected, ConnectionParameters::parseURI($uri));
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testParsingURIWithMoreThanOneEqualSignInQueryStringPairValue()
+    {
+        $uri = 'tcp://10.10.10.10?foobar=a=b=c&persistent=1';
+
+        $expected = array(
+            'scheme' => 'tcp',
+            'host' => '10.10.10.10',
+            'foobar' => 'a=b=c',
+            'persistent' => '1',
+        );
+
+        $this->assertSame($expected, ConnectionParameters::parseURI($uri));
+    }
+
+    /**
+     * @group disconnected
+     */
+    public function testParsingURIWhenQueryStringHasBracketsInFieldnames()
+    {
+        $uri = 'tcp://10.10.10.10?persistent=1&metavars[]=foo&metavars[]=hoge';
+
+        $expected = array(
+            'scheme' => 'tcp',
+            'host' => '10.10.10.10',
+            'persistent' => '1',
+            'metavars' => array('foo', 'hoge'),
+        );
+
+        $this->assertSame($expected, ConnectionParameters::parseURI($uri));
+    }
+
+    /**
+     * @group disconnected
+     * @expectedException Predis\ClientException
+     * @expectedExceptionMessage Invalid URI: tcp://invalid:uri
+     */
+    public function testParsingURIThrowOnInvalidURI()
+    {
+        ConnectionParameters::parseURI('tcp://invalid:uri');
+    }
+
     // ******************************************************************** //
     // ---- HELPER METHODS ------------------------------------------------ //
     // ******************************************************************** //
@@ -140,26 +236,13 @@ class ParametersTest extends StandardTestCase
             'host' => '127.0.0.1',
             'port' => 6379,
             'timeout' => 5.0,
-            'iterable_multibulk' => false,
         );
-    }
-
-    /**
-     * Returns a named array with the default connection parameters merged with
-     * the specified additional parameters.
-     *
-     * @param Array $additional Additional connection parameters.
-     * @return Array Connection parameters.
-     */
-    protected function getParametersArray(Array $additional)
-    {
-        return array_merge($this->getDefaultParametersArray(), $additional);
     }
 
     /**
      * Returns an URI string representation of the specified connection parameters.
      *
-     * @param Array $parameters Array of connection parameters.
+     * @param  Array  $parameters Array of connection parameters.
      * @return String URI string.
      */
     protected function getParametersString(Array $parameters)
