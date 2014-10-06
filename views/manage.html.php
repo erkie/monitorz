@@ -17,4 +17,10 @@
 		</label>
 		<input type="submit" value="Save" />
 	</form>
+
+	<form action="?delete" method="post">
+		<input type="hidden" name="config" value="<?php echo htmlentities($name); ?>" />
+		<input type="hidden" name="redirect" value="true" />
+		<input type="submit" value="DELETE" />
+	</form>
 </section>

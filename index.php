@@ -24,6 +24,21 @@ if (isset($_REQUEST['config'], $_REQUEST['monitor_config']))
 	exit;
 }
 
+if (isset($_REQUEST['delete'], $_REQUEST['config']))
+{
+	$monitorz->deleteMonitor($_REQUEST['config']);
+
+	if (isset($_REQUEST['redirect']))
+	{
+		header("Location: ?edit");
+	}
+	else
+	{
+		echo json_encode(array('ok' => true));
+	}
+	exit;
+}
+
 $stats = array();
 foreach ($monitorz->listAllKeys() as $key)
 {

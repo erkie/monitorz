@@ -12,7 +12,7 @@ class Monitorz
 	}
 
 	public function monitor($name, $value)
-	{	
+	{
 		$value_array = array(
 			'value' => $value,
 			'timestamp' => time()
@@ -33,6 +33,13 @@ class Monitorz
 	{
 		$raw_values = $this->redis->lrange(self::prepareKeyName($name), 0, -1);
 		return array_reverse(array_map("self::decodeValue", $raw_values));
+	}
+
+	public function deleteMonitor($name)
+	{
+		$this->redis->del(self::prepareKeyName($name));
+		$this->redis->del(self::prepareMonitorConfigName($name));
+		$this->redis->del(self::prepareCaseName($name));
 	}
 
 	public function getLastDataPoint($name)
